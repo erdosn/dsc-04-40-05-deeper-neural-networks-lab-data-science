@@ -48,6 +48,17 @@ matplotlib.rcParams['figure.figsize'] = (6.0, 6.0)
 plt.scatter(X[:,0], X[:,1], s=20, c=Y, edgecolors="gray")
 ```
 
+
+
+
+    <matplotlib.collections.PathCollection at 0x10da2d438>
+
+
+
+
+![png](index_files/index_6_1.png)
+
+
 Note that we just generated to "classes": the yellow dots and the purple dots. The goal of this lab is to create a model which can create a so-called "decision boundry" to distinguish the smaller (yellow) circle from the larger (purple) one.
 
 We'll build a neural network to do this. But first, let's build a logistic regression model and see how that model performs. 
@@ -58,8 +69,19 @@ Use the Scikit-learn function `linear_model.LogisticRegression()` to build a log
 
 
 ```python
-#Your code here
+log_reg = sklearn.linear_model.LogisticRegression()
+log_reg.fit(X, Y)
 ```
+
+
+
+
+    LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+              intercept_scaling=1, max_iter=100, multi_class='ovr', n_jobs=1,
+              penalty='l2', random_state=None, solver='liblinear', tol=0.0001,
+              verbose=0, warm_start=False)
+
+
 
 You'll use this helper function to visualize the classification performance.
 
@@ -87,13 +109,26 @@ In the helper function, let's create a lambda function inside `plot_decision_bou
 ```python
 #Your code here
 #Use the helper function provided to plot the decision boundary of your classifier above.
+plot_decision_boundary(lambda x: log_reg.predict(x))
+plt.title("Logistic Regression")
 ```
+
+
+
+
+    Text(0.5,1,'Logistic Regression')
+
+
+
+
+![png](index_files/index_15_1.png)
+
 
 Now explicitly store the predictions using `X` in `log_reg_predict`, so we can calculate the accuracy.`m
 
 
 ```python
-log_reg_predict = #Your code here
+log_reg_predict = log_reg.predict(X)
 ```
 
 
@@ -102,6 +137,9 @@ log_reg_predict = #Your code here
 print ('The logistic regression model has an accuracy of: ' 
        + str(np.sum(log_reg_predict == Y)/sample_size*100) + '%')
 ```
+
+    The logistic regression model has an accuracy of: 51.2%
+
 
 **How did this model perform? Is this a surprise? **
 
@@ -125,22 +163,37 @@ Note that the input layer has 2 inputs, $x_1$ and $x_2$ (which are basically the
 
 
 ```python
-#Your code here; print the shape of X to the console
+X.shape
 ```
+
+
+
+
+    (500, 2)
+
+
 
 Remember that for the neural networks, we want the number of inputs to be rows and the number of cases to be columns. Hence we transpose this matrix.
 
 
 ```python
-X_nn = #Your code here; take the transpose of the original matrix
+X_nn = X.T #Your code here; take the transpose of the original matrix
 ```
 
 Similarly, for the labels, we like to have a row-matrix.
 
 
 ```python
-Y_nn = #Your code here
+Y_nn = np.reshape(Y,(1,500)) #Your code here
+np.shape(X_nn), np.shape(Y_nn)
 ```
+
+
+
+
+    ((2, 500), (1, 500))
+
+
 
 
 ```python
@@ -151,9 +204,9 @@ As per the network architecture above, there are two nodes in the input layer, a
 
 
 ```python
-n_0 = #Your code here; appropriately define each variable
-n_1 = #Your code here; appropriately define each variable
-n_2 = #Your code here; appropriately define each variable
+n_0 = np.shape(X_nn)[0] #Your code here; appropriately define each variable
+n_1 = 6 #Your code here; appropriately define each variable
+n_2 = np.shape(Y_nn)[0]  #Your code here; appropriately define each variable
 ```
 
 ## Forward propagation
@@ -187,9 +240,9 @@ What are the correct dimensions for $W^{[2]}$ and $b^{[2]}$? Use `n_0`, `n_1` an
 def initialize_parameters(n_0, n_1, n_2):
     np.random.seed(123) 
     W1 = np.random.randn(n_1, n_0) * 0.05 
-    b1 = np.zeros((n_1, 1))
+    b1 = np.zeros((n_1, 1)) # bias
     W2 =  np.random.randn(n_2, n_1) * 0.05 
-    b2 = np.zeros((n_2, 1))
+    b2 = np.zeros((n_2, 1)) # bias 
     
     parameters = {"W1": W1,
                   "b1": b1,
@@ -201,7 +254,8 @@ def initialize_parameters(n_0, n_1, n_2):
 
 
 ```python
-parameters = #Use the provided function along with your variable presets above to store the parameters here. 
+parameters = initialize_parameters(n_0,n_1,n_2) 
+#Use the provided function along with your variable presets above to store the parameters here. 
 ```
 
 
@@ -217,13 +271,16 @@ parameters #Simply run this code block; your output should match the results pre
             [-0.02893001,  0.08257183],
             [-0.12133396, -0.02144563],
             [ 0.06329681, -0.04333702],
-            [-0.03394431, -0.00473545]]), 'b1': array([[0.],
+            [-0.03394431, -0.00473545]]),
+     'W2': array([[ 0.07456948, -0.0319451 , -0.0221991 , -0.02171756,  0.1102965 ,
+              0.1093393 ]]),
+     'b1': array([[0.],
             [0.],
             [0.],
             [0.],
             [0.],
-            [0.]]), 'W2': array([[ 0.07456948, -0.0319451 , -0.0221991 , -0.02171756,  0.1102965 ,
-              0.1093393 ]]), 'b2': array([[0.]])}
+            [0.]]),
+     'b2': array([[0.]])}
 
 
 
@@ -235,15 +292,15 @@ You can compute the sigmoid as $\sigma(z^{ [2] (i)}) = \displaystyle\frac{1}{1 +
 ```python
 #Finish this partially defined function as noted in the comments below.
 def forward_propagation(X, parameters):
-    W1 = #Your code here; retrieve the appropriate values from the parameters object 
-    b1 = #Your code here; retrieve the appropriate values from the parameters object 
-    W2 = #Your code here; retrieve the appropriate values from the parameters object 
-    b2 = #Your code here; retrieve the appropriate values from the parameters object 
+    W1 = parameters["W1"] #Your code here; retrieve the appropriate values from the parameters object 
+    b1 = parameters["b1"] #Your code here; retrieve the appropriate values from the parameters object 
+    W2 = parameters["W2"] #Your code here; retrieve the appropriate values from the parameters object 
+    b2 = parameters["b2"] #Your code here; retrieve the appropriate values from the parameters object 
     
-    Z1 =  #Your code here; write a formula to calculate Z1
-    A1 =  #Your code here; write a formula to calculate A1
-    Z2 =  #Your code here; write a formula to calculate Z2
-    A2 =  #Your code here; write a formula to calculate A2
+    Z1 = np.dot(W1,X)+b1 #Your code here; write a formula to calculate Z1
+    A1 = np.tanh(Z1) #Your code here; write a formula to calculate A1
+    Z2 = np.dot(W2,A1)+b2 #Your code here; write a formula to calculate Z2
+    A2 = 1/(1 + np.exp(-Z2)) #Your code here; write a formula to calculate A2
         
     fw_out = {"Z1": Z1,
               "A1": A1,
@@ -255,30 +312,59 @@ def forward_propagation(X, parameters):
 
 
 ```python
-fw_out = #Your code here; call your function above along with our defined parameters.
+fw_out = forward_propagation(X_nn,parameters) 
+#Your code here; call your function above along with our defined parameters.
 ```
 
 Inspect `Z1`, `A1`, `Z2` and `A2` and make sure that the shape of all the outputs is correct!
 
 
 ```python
-#Your code here; check the shape of Z1
+np.shape(fw_out["Z1"])#Your code here; check the shape of Z1
 ```
+
+
+
+
+    (6, 500)
+
+
 
 
 ```python
-#Your code here; check the shape of Z2
+np.shape(fw_out["Z2"]) #Your code here; check the shape of Z2
 ```
+
+
+
+
+    (1, 500)
+
+
 
 
 ```python
-#Your code here; check the shape of A1
+np.shape(fw_out["A1"]) #Your code here; check the shape of A1
 ```
+
+
+
+
+    (6, 500)
+
+
 
 
 ```python
-#Your code here; check the shape of A2
+np.shape(fw_out["A2"]) #Your code here; check the shape of A2
 ```
+
+
+
+
+    (1, 500)
+
+
 
 ## Compute the cost function
 
@@ -290,17 +376,22 @@ Write a cost function `compute_cost(A2, Y, parameters)` which returns the associ
 
 ```python
 #Complete the skeleton of this function provided as noted in the comments below.
+#Complete the skeleton of this function provided as noted in the comments below.
 def compute_cost(A2, Y, parameters):
     m = np.shape(Y)[1] 
     
     #Implement the formula provided above for the cost, J
     #you may wish to do this in multiple steps to avoid an overly large line of code
-    
+    log_prob = np.multiply(np.log(A2),Y)
+    cost = - (1/m) * np.sum(log_prob+ (1-Y)*np.log(1-A2)) 
     return cost
 ```
 
 
 ```python
+A2 = fw_out["A2"]
+compute_cost(A2, Y_nn, parameters)
+
 #Use your function as defined above to compute the cost given our problem as defined.
 ```
 
@@ -338,18 +429,18 @@ About $g^{[1]'}(z^{[1]})$: since $g^{[1]}(z^{[1]})$ is the tanh-function, its de
 def backward_propagation(parameters, fw_out, X, Y):
     m = X.shape[1]
 
-    W1 = #Your code here; retrieve the appropriate parameter from the parameters variable
-    W2 = #Your code here; retrieve the appropriate parameter from the parameters variable
+    W1 = parameters["W1"]#Your code here; retrieve the appropriate parameter from the parameters variable
+    W2 = parameters["W2"]#Your code here; retrieve the appropriate parameter from the parameters variable
 
-    A1 = #Your code here; retrieve the appropriate parameter from fw_out
-    A2 = #Your code here; retrieve the appropriate parameter from fw_out
+    A1 = fw_out["A1"] #Your code here; retrieve the appropriate parameter from fw_out
+    A2 = fw_out["A2"] #Your code here; retrieve the appropriate parameter from fw_out
     
-    dZ2 = #Your code here; use the formula provided above
+    dZ2 = A2-Y #Your code here; use the formula provided above
     dW2 = (1/m) * np.dot(dZ2, A1.T) #Code provided
     db2 = (1/m) * np.sum(dZ2,  axis=1, keepdims=True) #Code provided
-    dZ1 = #Your code here; use the formula provided above
-    dW1 = #Mirror the code provided above
-    db1 = #Mirror the code provided above
+    dZ1 = np.dot(W2.T, dZ2) * (1 - np.power(A1,2)) #Your code here; use the formula provided above
+    dW1 = (1/m) * np.dot(dZ1, X.T) #Mirror the code provided above
+    db1 = (1/m) * np.sum(dZ1,  axis=1, keepdims=True) #Mirror the code provided above
     
     bw_out = {"dW1": dW1,
               "db1": db1,
@@ -361,7 +452,8 @@ def backward_propagation(parameters, fw_out, X, Y):
 
 
 ```python
-bw_out = #Use your function above to create the bw_out variable
+bw_out = backward_propagation(parameters, fw_out, X_nn, Y_nn)
+#Use your function above to create the bw_out variable
 ```
 
 ## Update the parameters
@@ -382,10 +474,10 @@ def update_parameters(parameters, bw_out, alpha = 0.7):
     dW2 = bw_out["dW2"]
     db2 = bw_out["db2"]
     
-    W1 = #Your code here; update the values for each variable
-    b1 = #Your code here; update the values for each variable
-    W2 = #Your code here; update the values for each variable
-    b2 = #Your code here; update the values for each variable
+    W1 = W1 - alpha * dW1 #Your code here; update the values for each variable
+    b1 = b1 - alpha * db1 #Your code here; update the values for each variable
+    W2 = W2 - alpha * dW2 #Your code here; update the values for each variable
+    b2 = b2 - alpha * db2 #Your code here; update the values for each variable
     
     parameters = {"W1": W1,
                   "b1": b1,
@@ -393,6 +485,7 @@ def update_parameters(parameters, bw_out, alpha = 0.7):
                   "b2": b2}
     
     return parameters
+
 ```
 
 
@@ -408,13 +501,16 @@ update_parameters(parameters,bw_out) #Simply run this block of code. Output shou
             [-0.02891073,  0.08262535],
             [-0.12131568, -0.02139336],
             [ 0.06320089, -0.04360462],
-            [-0.03403915, -0.00500133]]), 'b1': array([[ 1.32898104e-05],
+            [-0.03403915, -0.00500133]]),
+     'W2': array([[ 0.07449547, -0.03177459, -0.02237429, -0.0215612 ,  0.11034683,
+              0.10938032]]),
+     'b1': array([[ 1.32898104e-05],
             [-6.19218875e-06],
             [-5.56636572e-06],
             [-1.09271502e-05],
             [ 2.13065980e-05],
-            [ 4.48639481e-06]]), 'W2': array([[ 0.07449547, -0.03177459, -0.02237429, -0.0215612 ,  0.11034683,
-              0.10938032]]), 'b2': array([[1.82562182e-06]])}
+            [ 4.48639481e-06]]),
+     'b2': array([[1.82562182e-06]])}
 
 
 
@@ -426,7 +522,7 @@ def nn_model(X, Y, n_1, num_iter = 10000, print_cost=False):
     n_x = np.shape(X)[0] 
     n_y = np.shape(Y)[0] 
 
-    parameters = #Your code here; use our previous function above to set parameters.
+    parameters = initialize_parameters(n_0, n_1, n_2) #Your code here; use our previous function above to set parameters.
     W1 = parameters["W1"]
     b1 = parameters["b1"]
     W2 = parameters["W2"]
@@ -435,19 +531,19 @@ def nn_model(X, Y, n_1, num_iter = 10000, print_cost=False):
     for i in range(0, num_iter):
          
         # Forward propagation. Inputs: "X, parameters". Outputs: "fw_out".
-        fw_out = #Your code here
+        fw_out = forward_propagation(X, parameters) #Your code here
         
         # We'll need A2 from fw_out to add it in the cost function
         A2 = fw_out["A2"]
         
         # Use the cost function with inputs: "A2", "Y", "parameters".
-        cost = #Your code here
+        cost = compute_cost(A2, Y, parameters) #Your code here
  
         # Use the backward propagation function with inputs: "parameters", "fw_out", "X", "Y".
-        bw_out = #Your code here
+        bw_out = backward_propagation(parameters, fw_out, X, Y) #Your code here
  
         # Parameter update with gradient descent. Inputs: "parameters" and"bw_out".
-        parameters = #Your code here
+        parameters = update_parameters(parameters, bw_out) #Your code here
                 
         # Print the cost every 1000 iterations
         if print_cost and i % 1000 == 0:
@@ -459,11 +555,11 @@ def nn_model(X, Y, n_1, num_iter = 10000, print_cost=False):
 
 ```python
 #Code provided; review for understanding but no editing needed!
-def predict(parameters, X):
+def predict(parameters, X, thresh=0.5):
     fw_out = forward_propagation(X, parameters)
     A2 = fw_out["A2"]
 
-    predictions = A2 > 0.5
+    predictions = A2 > thresh # 0 or 1
     return predictions
 ```
 
@@ -481,12 +577,12 @@ plt.title("Decision Boundary for neural network with 1 hidden layer")
     Cost after iteration 1000: 0.693075
     Cost after iteration 2000: 0.692952
     Cost after iteration 3000: 0.507182
-    Cost after iteration 4000: 0.479930
-    Cost after iteration 5000: 0.481106
-    Cost after iteration 6000: 0.481934
-    Cost after iteration 7000: 0.483635
-    Cost after iteration 8000: 0.484555
-    Cost after iteration 9000: 0.485062
+    Cost after iteration 4000: 0.476055
+    Cost after iteration 5000: 0.475328
+    Cost after iteration 6000: 0.475528
+    Cost after iteration 7000: 0.477015
+    Cost after iteration 8000: 0.477842
+    Cost after iteration 9000: 0.478303
 
 
 
@@ -513,7 +609,7 @@ print ('The logistic regression model has an accuracy of: '
        + str(np.sum(nn_predict == Y)/sample_size*100) + '%')
 ```
 
-    The logistic regression model has an accuracy of: 73.4%
+    The logistic regression model has an accuracy of: 81.8%
 
 
 ## Additional Resources
